@@ -19,7 +19,7 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run() {
     try {
         // connect database
-        await client.connect;
+        await client.connect();
         console.log('connection success');
 
         // create database and collection
@@ -27,9 +27,22 @@ async function run() {
         const productsCollection = database.collection('products');
 
         app.get('/products', async (req, res) => {
+            console.log(req.query);
             const cursor = productsCollection.find({});
-            const products = await cursor.toArray();
-            res.send(products);
+            const count = await cursor.count();
+            const page = req.query.page;
+            const size = parseInt(req.query.size);
+            let products;
+            if (page) {
+                products = await cursor.skip(page * size).limit(size).toArray();
+            }
+            else {
+                const products = await cursor.toArray();
+            }
+            res.send({
+                count,
+                products
+            });
         })
 
 
